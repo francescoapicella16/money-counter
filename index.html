@@ -21,7 +21,7 @@
       --accent: #6ea8fe;
       --accent-2: #7ef0c2;
       --danger: #ff6b6b;
-      --danger-2: #ff8e8e;
+      --danger-2: #ff9c9c;
       --success: #7ef0c2;
       --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
       --radius-xl: 24px;
@@ -40,14 +40,14 @@
         radial-gradient(circle at bottom left, rgba(126,240,194,0.12), transparent 28%),
         linear-gradient(180deg, #08101f 0%, #0b1020 100%);
       min-height: 100vh;
-      padding: 24px;
+      padding: 20px;
     }
 
     .app {
       max-width: 1240px;
       margin: 0 auto;
       display: grid;
-      gap: 20px;
+      gap: 18px;
     }
 
     .hero {
@@ -55,7 +55,7 @@
       border: 1px solid var(--card-border);
       backdrop-filter: blur(18px);
       border-radius: var(--radius-xl);
-      padding: 24px;
+      padding: 22px;
       box-shadow: var(--shadow);
       display: flex;
       align-items: center;
@@ -66,7 +66,7 @@
 
     .hero h1 {
       margin: 0 0 6px;
-      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-size: clamp(2rem, 5vw, 3.1rem);
       letter-spacing: -0.03em;
     }
 
@@ -83,6 +83,45 @@
       padding: 10px 14px;
       border-radius: 999px;
       font-size: 0.92rem;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .tab-btn {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid transparent;
+      border-radius: 14px;
+      padding: 14px 12px;
+      font-weight: 800;
+      font-size: 0.98rem;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    .tab-btn.active {
+      color: white;
+      background: linear-gradient(135deg, rgba(110,168,254,0.22), rgba(126,240,194,0.12));
+      border-color: rgba(255,255,255,0.12);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+    }
+
+    .page {
+      display: none;
+      gap: 20px;
+    }
+
+    .page.active {
+      display: grid;
     }
 
     .grid {
@@ -108,8 +147,7 @@
 
     .panel h2 {
       margin: 0 0 18px;
-      font-size: 1.1rem;
-      color: var(--text);
+      font-size: 1.08rem;
     }
 
     .cards {
@@ -134,7 +172,7 @@
     }
 
     .stat .value {
-      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-size: clamp(1.35rem, 3vw, 2rem);
       font-weight: 700;
       letter-spacing: -0.03em;
       word-break: break-word;
@@ -145,13 +183,8 @@
       box-shadow: 0 0 0 1px rgba(255,107,107,0.18) inset;
     }
 
-    .value-negative {
-      color: var(--danger-2);
-    }
-
-    .value-positive {
-      color: var(--success);
-    }
+    .value-negative { color: var(--danger-2); }
+    .value-positive { color: var(--success); }
 
     .form-grid {
       display: grid;
@@ -171,7 +204,7 @@
       font-size: 0.92rem;
     }
 
-    input, select {
+    input {
       width: 100%;
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.12);
@@ -186,7 +219,7 @@
       color: rgba(169,179,209,0.75);
     }
 
-    input:focus, select:focus {
+    input:focus {
       border-color: rgba(110,168,254,0.9);
       box-shadow: 0 0 0 4px rgba(110,168,254,0.16);
     }
@@ -206,7 +239,7 @@
       font-size: 0.98rem;
       font-weight: 700;
       cursor: pointer;
-      transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+      transition: transform 0.15s ease, opacity 0.15s ease;
     }
 
     button:hover { transform: translateY(-1px); }
@@ -247,15 +280,33 @@
       background: rgba(255,107,107,0.12);
       color: #ffb0b0;
       border: 1px solid rgba(255,107,107,0.22);
-      padding: 10px 12px;
-      font-size: 0.86rem;
-      min-width: auto;
+      padding: 7px 10px;
+      font-size: 0.75rem;
+      border-radius: 10px;
     }
 
     .btn-delete:disabled {
       opacity: 0.45;
       cursor: not-allowed;
       transform: none;
+    }
+
+    .btn-hard-delete {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border-radius: 999px;
+      background: rgba(255,107,107,0.18);
+      color: #ffd1d1;
+      border: 1px solid rgba(255,107,107,0.28);
+      font-size: 0.82rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .hint {
@@ -266,16 +317,13 @@
     }
 
     .log {
-      margin-top: 18px;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      max-height: 420px;
-      overflow: auto;
-      padding-right: 4px;
     }
 
     .log-item {
+      position: relative;
       display: grid;
       grid-template-columns: 1fr auto;
       gap: 12px;
@@ -295,9 +343,10 @@
     }
 
     .log-item.deleted {
-      opacity: 0.6;
+      opacity: 0.62;
       border-color: rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.03);
+      padding-top: 20px;
     }
 
     .log-item.deleted .log-text,
@@ -342,13 +391,8 @@
       align-self: center;
     }
 
-    .amount.negative {
-      color: var(--danger-2);
-    }
-
-    .amount.positive {
-      color: var(--success);
-    }
+    .amount.negative { color: var(--danger-2); }
+    .amount.positive { color: var(--success); }
 
     .log-right {
       display: flex;
@@ -365,7 +409,6 @@
       padding: 32px 16px;
       border: 1px dashed rgba(255,255,255,0.15);
       border-radius: 18px;
-      margin-top: 18px;
     }
 
     .chart-wrap {
@@ -388,10 +431,24 @@
       margin-top: 28px;
     }
 
+    .history-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .history-meta {
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
     @media (max-width: 980px) {
       .grid { grid-template-columns: 1fr; }
       .cards { grid-template-columns: 1fr; }
-      .charts-grid { grid-template-columns: 1fr; }
+      .tabs { grid-template-columns: 1fr 1fr 1fr; }
     }
 
     @media (max-width: 640px) {
@@ -402,6 +459,7 @@
       .log-item { grid-template-columns: 1fr; }
       .log-right { align-items: stretch; }
       .amount { justify-self: start; }
+      .tabs { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -410,75 +468,94 @@
     <section class="hero">
       <div>
         <h1>Money Counter</h1>
-        <p>Monitora contanti, soldi sul conto e totale complessivo in modo rapido, pulito e salvato in locale.</p>
+        <p>Controlla entrate, uscite, storico e statistiche in un’interfaccia pulita e responsive.</p>
       </div>
       <div class="chip" id="lastUpdate">Ultimo aggiornamento: --</div>
     </section>
 
-    <div class="grid">
-      <section class="panel">
-        <h2>Saldo attuale</h2>
-        <div class="cards">
-          <div class="stat" id="contantiCard">
-            <div class="label">💵 Contanti</div>
-            <div class="value" id="contantiValue">€ 0,00</div>
+    <div class="tabs">
+      <button class="tab-btn active" data-page="dashboardPage">Dashboard</button>
+      <button class="tab-btn" data-page="historyPage">Storico</button>
+      <button class="tab-btn" data-page="statsPage">Statistiche</button>
+    </div>
+
+    <section class="page active" id="dashboardPage">
+      <div class="grid">
+        <section class="panel">
+          <h2>Saldo attuale</h2>
+          <div class="cards">
+            <div class="stat" id="contantiCard">
+              <div class="label">💵 Contanti</div>
+              <div class="value" id="contantiValue">€ 0,00</div>
+            </div>
+            <div class="stat" id="contoCard">
+              <div class="label">🏦 Sul conto</div>
+              <div class="value" id="contoValue">€ 0,00</div>
+            </div>
+            <div class="stat" id="totaleCard">
+              <div class="label">📊 Totale</div>
+              <div class="value" id="totaleValue">€ 0,00</div>
+            </div>
           </div>
-          <div class="stat" id="contoCard">
-            <div class="label">🏦 Sul conto</div>
-            <div class="value" id="contoValue">€ 0,00</div>
+
+          <h2>Aggiungi movimento</h2>
+          <div class="form-grid">
+            <div class="field">
+              <label for="importo">Importo</label>
+              <input type="text" id="importo" inputmode="decimal" placeholder="Es. 250 oppure ,100 per -100">
+            </div>
+            <div class="field">
+              <label for="nota">Nota opzionale</label>
+              <input type="text" id="nota" maxlength="80" placeholder="Es. Bonifico cliente / Spesa carburante">
+            </div>
           </div>
-          <div class="stat" id="totaleCard">
-            <div class="label">📊 Totale</div>
-            <div class="value" id="totaleValue">€ 0,00</div>
+
+          <div class="actions">
+            <button class="btn-primary" id="addContantiBtn">Aggiungi ai contanti</button>
+            <button class="btn-secondary" id="addContoBtn">Aggiungi al conto</button>
           </div>
-        </div>
 
-        <h2>Aggiungi movimento</h2>
-        <div class="form-grid">
-          <div class="field">
-            <label for="importo">Importo</label>
-            <input type="text" id="importo" inputmode="decimal" placeholder="Es. 250.00 oppure ,200 per -200">
+          <div class="secondary-actions">
+            <button class="btn-ghost" id="exportExcelBtn">Esporta Excel</button>
+            <button class="btn-ghost" id="exportPdfBtn">Esporta PDF</button>
           </div>
-          <div class="field">
-            <label for="nota">Nota opzionale</label>
-            <input type="text" id="nota" maxlength="80" placeholder="Es. Bonifico cliente / Spesa carburante">
+
+          <div class="hint">
+            Puoi inserire importi positivi o negativi. Su iPhone, se scrivi <strong>,100</strong> verrà interpretato come <strong>-100</strong>.
           </div>
-        </div>
 
-        <div class="actions">
-          <button class="btn-primary" id="addContantiBtn">Aggiungi ai contanti</button>
-          <button class="btn-secondary" id="addContoBtn">Aggiungi al conto</button>
-        </div>
+          <hr class="section-divider">
 
-        <div class="secondary-actions">
-          <button class="btn-ghost" id="exportExcelBtn">Esporta Excel</button>
-          <button class="btn-ghost" id="exportPdfBtn">Esporta PDF</button>
-        </div>
+          <div class="bottom-actions">
+            <button class="btn-danger" id="resetBtn">Reset dati</button>
+          </div>
+          <div class="hint">
+            Il reset azzera i saldi ma lascia le registrazioni nello storico come cancellate da reset.
+          </div>
+        </section>
 
-        <div class="hint">
-          Puoi inserire importi positivi o negativi. Su iPhone puoi scrivere anche <strong>,100</strong> per indicare <strong>-100</strong>. I dati vengono salvati sul dispositivo.
-        </div>
-
-        <h2 style="margin-top: 24px;">Storico movimenti</h2>
-        <div id="logContainer"></div>
-
-        <hr class="section-divider">
-
-        <div class="bottom-actions">
-          <button class="btn-danger" id="resetBtn">Reset dati</button>
-        </div>
-        <div class="hint">Il reset richiede doppia conferma, azzera i saldi e lascia i movimenti nello storico come cancellati da reset.</div>
-      </section>
-
-      <div class="charts-grid">
         <section class="panel">
           <h2>Distribuzione attuale</h2>
           <div class="chart-wrap">
             <canvas id="moneyChart"></canvas>
           </div>
-          <div class="hint">Riepilogo istantaneo di contanti e saldo sul conto.</div>
+          <div class="hint">Panoramica immediata dei saldi attivi.</div>
         </section>
+      </div>
+    </section>
 
+    <section class="page" id="historyPage">
+      <section class="panel">
+        <div class="history-toolbar">
+          <h2 style="margin:0;">Storico movimenti</h2>
+          <div class="history-meta" id="historyMeta">0 movimenti</div>
+        </div>
+        <div id="logContainer"></div>
+      </section>
+    </section>
+
+    <section class="page" id="statsPage">
+      <div class="charts-grid">
         <section class="panel">
           <h2>Andamento settimanale</h2>
           <div class="chart-wrap small">
@@ -495,7 +572,7 @@
           <div class="hint">Somma netta dei movimenti per mese.</div>
         </section>
       </div>
-    </div>
+    </section>
   </div>
 
   <script>
@@ -518,9 +595,22 @@
     const importoInput = document.getElementById('importo');
     const notaInput = document.getElementById('nota');
     const logContainer = document.getElementById('logContainer');
+    const historyMeta = document.getElementById('historyMeta');
     const contantiCard = document.getElementById('contantiCard');
     const contoCard = document.getElementById('contoCard');
     const totaleCard = document.getElementById('totaleCard');
+
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const pages = document.querySelectorAll('.page');
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => b.classList.remove('active'));
+        pages.forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.page).classList.add('active');
+      });
+    });
 
     const commonChartOptions = {
       responsive: true,
@@ -666,11 +756,7 @@
       if (!value) return NaN;
 
       value = value.replace(/\s+/g, '');
-
-      if (value.startsWith(',')) {
-        value = '-' + value.slice(1);
-      }
-
+      if (value.startsWith(',')) value = '-' + value.slice(1);
       value = value.replace(',', '.');
 
       return Number(value);
@@ -758,8 +844,12 @@
     }
 
     function renderLog() {
+      const totalCount = state.transactions.length;
+      const deletedCount = state.transactions.filter(t => t.deleted).length;
+      historyMeta.textContent = `${totalCount} movimenti · ${deletedCount} eliminati`;
+
       if (!state.transactions.length) {
-        logContainer.innerHTML = '<div class="empty">Nessun movimento registrato. Inserisci il primo importo qui sopra.</div>';
+        logContainer.innerHTML = '<div class="empty">Nessun movimento registrato. Inserisci il primo dalla Dashboard.</div>';
         return;
       }
 
@@ -769,6 +859,7 @@
         const deletedReason = item.deletedReason || '';
         return `
           <div class="log-item ${isDeleted ? 'deleted' : (isNegative ? 'negative' : 'positive')}">
+            ${isDeleted ? `<button class="btn-hard-delete" onclick="hardDeleteTransaction('${item.id}')" title="Elimina definitivamente">×</button>` : ''}
             <div>
               <div class="log-top">
                 <span class="badge">${item.type === 'contanti' ? 'Contanti' : 'Conto'}</span>
@@ -783,7 +874,7 @@
             <div class="log-right">
               <div class="amount ${isDeleted ? '' : (isNegative ? 'negative' : 'positive')}">${currency.format(item.amount)}</div>
               <button class="btn-delete" onclick="deleteTransaction('${item.id}')" ${isDeleted ? 'disabled' : ''}>
-                ${isDeleted ? 'Già cancellato' : 'Elimina'}
+                ${isDeleted ? 'Eliminato' : 'Elimina'}
               </button>
             </div>
           </div>
@@ -839,10 +930,10 @@
     }
 
     function deleteTransaction(id) {
-      const first = confirm('Vuoi davvero cancellare questo movimento?');
+      const first = confirm('Vuoi davvero eliminare questo movimento dallo storico attivo?');
       if (!first) return;
 
-      const second = confirm('Conferma finale: il movimento verrà escluso dai totali ma resterà visibile nello storico come cancellato.');
+      const second = confirm('Conferma finale: il movimento verrà escluso dai totali ma resterà visibile come eliminato.');
       if (!second) return;
 
       const tx = state.transactions.find(t => t.id === id);
@@ -856,11 +947,23 @@
       updateUI();
     }
 
+    function hardDeleteTransaction(id) {
+      const first = confirm('Vuoi eliminare definitivamente questo movimento?');
+      if (!first) return;
+
+      const second = confirm('Conferma finale: questa eliminazione definitiva non sarà recuperabile.');
+      if (!second) return;
+
+      state.transactions = state.transactions.filter(t => t.id !== id);
+      saveState();
+      updateUI();
+    }
+
     function resetData() {
       const first = confirm('Vuoi davvero azzerare tutti i dati?');
       if (!first) return;
 
-      const second = confirm('Conferma finale: i saldi torneranno a zero e tutti i movimenti attivi resteranno nello storico come cancellati da reset.');
+      const second = confirm('Conferma finale: i saldi torneranno a zero e i movimenti attivi resteranno nello storico come cancellati da reset.');
       if (!second) return;
 
       const resetTime = new Date().toISOString();
@@ -878,7 +981,7 @@
 
       saveState();
       updateUI();
-      alert('Reset completato. I movimenti restano nello storico come cancellati da reset.');
+      alert('Reset completato.');
     }
 
     function buildExportRows() {
@@ -984,6 +1087,9 @@
     });
 
     updateUI();
+
+    window.deleteTransaction = deleteTransaction;
+    window.hardDeleteTransaction = hardDeleteTransaction;
   </script>
 </body>
 </html>
