@@ -243,6 +243,21 @@
       justify-content: center;
     }
 
+    .btn-delete {
+      background: rgba(255,107,107,0.12);
+      color: #ffb0b0;
+      border: 1px solid rgba(255,107,107,0.22);
+      padding: 10px 12px;
+      font-size: 0.86rem;
+      min-width: auto;
+    }
+
+    .btn-delete:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .hint {
       margin-top: 10px;
       font-size: 0.9rem;
@@ -263,7 +278,7 @@
     .log-item {
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 8px;
+      gap: 12px;
       padding: 14px;
       border-radius: 16px;
       background: rgba(255,255,255,0.05);
@@ -277,6 +292,17 @@
 
     .log-item.positive {
       border-color: rgba(126,240,194,0.18);
+    }
+
+    .log-item.deleted {
+      opacity: 0.6;
+      border-color: rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .log-item.deleted .log-text,
+    .log-item.deleted .amount {
+      text-decoration: line-through;
     }
 
     .log-top {
@@ -305,6 +331,11 @@
       color: var(--danger-2);
     }
 
+    .badge.deleted {
+      background: rgba(255,255,255,0.1);
+      color: #d3d9eb;
+    }
+
     .amount {
       font-weight: 800;
       font-size: 1.05rem;
@@ -317,6 +348,14 @@
 
     .amount.positive {
       color: var(--success);
+    }
+
+    .log-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      justify-content: center;
     }
 
     .empty {
@@ -361,6 +400,7 @@
       .form-grid { grid-template-columns: 1fr; }
       .btn-primary, .btn-secondary, .btn-ghost { min-width: 100%; }
       .log-item { grid-template-columns: 1fr; }
+      .log-right { align-items: stretch; }
       .amount { justify-self: start; }
     }
   </style>
@@ -397,7 +437,7 @@
         <div class="form-grid">
           <div class="field">
             <label for="importo">Importo</label>
-            <input type="number" id="importo" step="0.01" inputmode="decimal" placeholder="Es. 250.00 oppure -200.00">
+            <input type="text" id="importo" inputmode="decimal" placeholder="Es. 250.00 oppure ,200 per -200">
           </div>
           <div class="field">
             <label for="nota">Nota opzionale</label>
@@ -416,7 +456,7 @@
         </div>
 
         <div class="hint">
-          Puoi inserire importi positivi o negativi. Esempio: <strong>250</strong> per un’entrata, <strong>-200</strong> per una spesa. I dati vengono salvati sul dispositivo.
+          Puoi inserire importi positivi o negativi. Su iPhone puoi scrivere anche <strong>,100</strong> per indicare <strong>-100</strong>. I dati vengono salvati sul dispositivo.
         </div>
 
         <h2 style="margin-top: 24px;">Storico movimenti</h2>
@@ -427,7 +467,7 @@
         <div class="bottom-actions">
           <button class="btn-danger" id="resetBtn">Reset dati</button>
         </div>
-        <div class="hint">Il reset richiede doppia conferma e azzera saldi e storico.</div>
+        <div class="hint">Il reset richiede doppia conferma, azzera i saldi e lascia i movimenti nello storico come cancellati da reset.</div>
       </section>
 
       <div class="charts-grid">
@@ -459,7 +499,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'moneyCounterData_v3';
+    const STORAGE_KEY = 'moneyCounterData_v5';
     const currency = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' });
 
     const defaultState = {
@@ -547,9 +587,7 @@
       },
       options: {
         ...commonChartOptions,
-        plugins: {
-          legend: { display: false }
-        }
+        plugins: { legend: { display: false } }
       }
     });
 
@@ -622,6 +660,36 @@
       return div.innerHTML;
     }
 
+    function parseAmount(rawValue) {
+      if (rawValue == null) return NaN;
+      let value = String(rawValue).trim();
+      if (!value) return NaN;
+
+      value = value.replace(/\s+/g, '');
+
+      if (value.startsWith(',')) {
+        value = '-' + value.slice(1);
+      }
+
+      value = value.replace(',', '.');
+
+      return Number(value);
+    }
+
+    function getActiveTransactions() {
+      return state.transactions.filter(t => !t.deleted);
+    }
+
+    function recalculateBalances() {
+      state.contanti = 0;
+      state.conto = 0;
+
+      getActiveTransactions().forEach(t => {
+        if (t.type === 'contanti') state.contanti += Number(t.amount);
+        if (t.type === 'conto') state.conto += Number(t.amount);
+      });
+    }
+
     function setValueStyle(el, card, value) {
       el.classList.remove('value-negative', 'value-positive');
       card.classList.remove('is-negative');
@@ -648,7 +716,7 @@
         dayMap.set(d.toISOString().slice(0, 10), 0);
       }
 
-      state.transactions.forEach(t => {
+      getActiveTransactions().forEach(t => {
         const d = new Date(t.createdAt);
         d.setHours(0,0,0,0);
         const key = d.toISOString().slice(0, 10);
@@ -674,7 +742,7 @@
       weeklyChart.update();
 
       const monthMap = new Map();
-      state.transactions.forEach(t => {
+      getActiveTransactions().forEach(t => {
         const d = new Date(t.createdAt);
         const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
         monthMap.set(key, (monthMap.get(key) || 0) + Number(t.amount));
@@ -697,23 +765,34 @@
 
       logContainer.innerHTML = `<div class="log">${state.transactions.slice().reverse().map(item => {
         const isNegative = Number(item.amount) < 0;
+        const isDeleted = !!item.deleted;
+        const deletedReason = item.deletedReason || '';
         return `
-          <div class="log-item ${isNegative ? 'negative' : 'positive'}">
+          <div class="log-item ${isDeleted ? 'deleted' : (isNegative ? 'negative' : 'positive')}">
             <div>
               <div class="log-top">
                 <span class="badge">${item.type === 'contanti' ? 'Contanti' : 'Conto'}</span>
-                <span class="badge ${isNegative ? 'out' : 'in'}">${isNegative ? 'Uscita' : 'Entrata'}</span>
+                <span class="badge ${isDeleted ? 'deleted' : (isNegative ? 'out' : 'in')}">
+                  ${isDeleted ? 'Cancellato' : (isNegative ? 'Uscita' : 'Entrata')}
+                </span>
                 <span class="badge">${formatDate(item.createdAt)}</span>
+                ${deletedReason ? `<span class="badge deleted">${escapeHtml(deletedReason)}</span>` : ''}
               </div>
-              <div>${escapeHtml(item.note || 'Movimento senza nota')}</div>
+              <div class="log-text">${escapeHtml(item.note || 'Movimento senza nota')}</div>
             </div>
-            <div class="amount ${isNegative ? 'negative' : 'positive'}">${currency.format(item.amount)}</div>
+            <div class="log-right">
+              <div class="amount ${isDeleted ? '' : (isNegative ? 'negative' : 'positive')}">${currency.format(item.amount)}</div>
+              <button class="btn-delete" onclick="deleteTransaction('${item.id}')" ${isDeleted ? 'disabled' : ''}>
+                ${isDeleted ? 'Già cancellato' : 'Elimina'}
+              </button>
+            </div>
           </div>
         `;
       }).join('')}</div>`;
     }
 
     function updateUI() {
+      recalculateBalances();
       const totale = state.contanti + state.conto;
 
       contantiValue.textContent = currency.format(state.contanti);
@@ -733,7 +812,7 @@
     }
 
     function addTransaction(type) {
-      const amount = Number(importoInput.value);
+      const amount = parseAmount(importoInput.value);
       const note = notaInput.value.trim();
 
       if (Number.isNaN(amount) || amount === 0) {
@@ -741,14 +820,15 @@
         return;
       }
 
-      if (type === 'contanti') state.contanti += amount;
-      if (type === 'conto') state.conto += amount;
-
       state.transactions.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2),
         type,
         amount,
         note,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        deleted: false,
+        deletedAt: null,
+        deletedReason: null
       });
 
       saveState();
@@ -758,30 +838,61 @@
       importoInput.focus();
     }
 
+    function deleteTransaction(id) {
+      const first = confirm('Vuoi davvero cancellare questo movimento?');
+      if (!first) return;
+
+      const second = confirm('Conferma finale: il movimento verrà escluso dai totali ma resterà visibile nello storico come cancellato.');
+      if (!second) return;
+
+      const tx = state.transactions.find(t => t.id === id);
+      if (!tx || tx.deleted) return;
+
+      tx.deleted = true;
+      tx.deletedAt = new Date().toISOString();
+      tx.deletedReason = 'Cancellato manualmente';
+
+      saveState();
+      updateUI();
+    }
+
     function resetData() {
       const first = confirm('Vuoi davvero azzerare tutti i dati?');
       if (!first) return;
-      const second = confirm('Conferma finale: questa operazione cancellerà saldi e storico movimenti.');
+
+      const second = confirm('Conferma finale: i saldi torneranno a zero e tutti i movimenti attivi resteranno nello storico come cancellati da reset.');
       if (!second) return;
 
-      state = { ...defaultState };
-      localStorage.removeItem(STORAGE_KEY);
+      const resetTime = new Date().toISOString();
+
+      state.transactions.forEach(t => {
+        if (!t.deleted) {
+          t.deleted = true;
+          t.deletedAt = resetTime;
+          t.deletedReason = 'Cancellato da reset';
+        }
+      });
+
+      state.contanti = 0;
+      state.conto = 0;
+
       saveState();
       updateUI();
-      alert('Dati azzerati correttamente.');
+      alert('Reset completato. I movimenti restano nello storico come cancellati da reset.');
     }
 
     function buildExportRows() {
+      recalculateBalances();
       return [
         { Sezione: 'RIEPILOGO', Tipo: 'Contanti', Importo: state.contanti, Data: '', Nota: '' },
         { Sezione: 'RIEPILOGO', Tipo: 'Conto', Importo: state.conto, Data: '', Nota: '' },
         { Sezione: 'RIEPILOGO', Tipo: 'Totale', Importo: state.contanti + state.conto, Data: '', Nota: '' },
         ...state.transactions.map(t => ({
-          Sezione: 'MOVIMENTO',
+          Sezione: t.deleted ? 'MOVIMENTO CANCELLATO' : 'MOVIMENTO',
           Tipo: t.type === 'contanti' ? 'Contanti' : 'Conto',
           Importo: t.amount,
           Data: formatDate(t.createdAt),
-          Nota: t.note || ''
+          Nota: `${t.note || ''}${t.deleted ? ` [${t.deletedReason || 'CANCELLATO'}]` : ''}`
         }))
       ];
     }
@@ -791,7 +902,7 @@
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(rows);
       ws['!cols'] = [
-        { wch: 14 },
+        { wch: 22 },
         { wch: 12 },
         { wch: 14 },
         { wch: 22 },
@@ -802,6 +913,8 @@
     }
 
     async function exportPDF() {
+      recalculateBalances();
+
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
       const width = pdf.internal.pageSize.getWidth();
@@ -849,7 +962,8 @@
             pdf.addPage();
             y = 50;
           }
-          const line = `${formatDate(item.createdAt)} | ${item.type === 'contanti' ? 'Contanti' : 'Conto'} | ${currency.format(item.amount)} | ${item.note || 'Nessuna nota'}`;
+          const reasonPart = item.deleted ? ` | ${item.deletedReason || 'CANCELLATO'}` : '';
+          const line = `${formatDate(item.createdAt)} | ${item.type === 'contanti' ? 'Contanti' : 'Conto'} | ${currency.format(item.amount)} | ${item.note || 'Nessuna nota'}${reasonPart}`;
           const split = pdf.splitTextToSize(line, width - 80);
           pdf.text(split, 40, y);
           y += (split.length * 12) + 8;
