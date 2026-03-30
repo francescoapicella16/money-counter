@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Money Counter</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-2: #111936;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text: #f3f6ff;
+      --muted: #a9b3d1;
+      --accent: #6ea8fe;
+      --accent-2: #7ef0c2;
+      --danger: #ff6b6b;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(110,168,254,0.22), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(126,240,194,0.12), transparent 28%),
+        linear-gradient(180deg, #08101f 0%, #0b1020 100%);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .app {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: grid;
+      gap: 20px;
+    }
+
+    .hero {
+      background: linear-gradient(145deg, rgba(255,255,255,0.09), rgba(255,255,255,0.04));
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(18px);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .hero h1 {
+      margin: 0 0 6px;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .chip {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin: 0 0 18px;
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .stat {
+      padding: 18px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .stat .label {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .stat .value {
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      word-break: break-word;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    input, select {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 14px 15px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: rgba(110,168,254,0.9);
+      box-shadow: 0 0 0 4px rgba(110,168,254,0.16);
+    }
+
+    .actions, .secondary-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #4f7cff);
+      color: white;
+      box-shadow: 0 10px 24px rgba(79,124,255,0.28);
+      flex: 1;
+      min-width: 170px;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #1fcf95, #17b27f);
+      color: white;
+      box-shadow: 0 10px 24px rgba(31,207,149,0.25);
+      flex: 1;
+      min-width: 170px;
+    }
+
+    .btn-ghost {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.12);
+      min-width: 160px;
+    }
+
+    .btn-danger {
+      background: rgba(255,107,107,0.12);
+      color: #ffb0b0;
+      border: 1px solid rgba(255,107,107,0.28);
+      margin-left: auto;
+      opacity: 0.88;
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .log {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 360px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .log-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .log-top {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .badge {
+      font-size: 0.78rem;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      color: var(--muted);
+    }
+
+    .amount {
+      font-weight: 800;
+      font-size: 1.05rem;
+      align-self: center;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: center;
+      padding: 32px 16px;
+      border: 1px dashed rgba(255,255,255,0.15);
+      border-radius: 18px;
+      margin-top: 18px;
+    }
+
+    canvas {
+      width: 100% !important;
+      max-height: 280px !important;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 14px; }
+      .hero, .panel { padding: 18px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .btn-primary, .btn-secondary, .btn-ghost { min-width: 100%; }
+      .btn-danger { width: 100%; margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <div>
+        <h1>Money Counter</h1>
+        <p>Monitora contanti, soldi sul conto e totale complessivo in modo rapido, pulito e salvato in locale.</p>
+      </div>
+      <div class="chip" id="lastUpdate">Ultimo aggiornamento: --</div>
+    </section>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>Saldo attuale</h2>
+        <div class="cards">
+          <div class="stat">
+            <div class="label">💵 Contanti</div>
+            <div class="value" id="contantiValue">€ 0,00</div>
+          </div>
+          <div class="stat">
+            <div class="label">🏦 Sul conto</div>
+            <div class="value" id="contoValue">€ 0,00</div>
+          </div>
+          <div class="stat">
+            <div class="label">📊 Totale</div>
+            <div class="value" id="totaleValue">€ 0,00</div>
+          </div>
+        </div>
+
+        <h2>Aggiungi movimento</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label for="importo">Importo</label>
+            <input type="number" id="importo" step="0.01" inputmode="decimal" placeholder="Es. 250.00">
+          </div>
+          <div class="field">
+            <label for="nota">Nota opzionale</label>
+            <input type="text" id="nota" maxlength="80" placeholder="Es. Bonifico cliente / Contanti giornata">
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" id="addContantiBtn">+ Aggiungi ai contanti</button>
+          <button class="btn-secondary" id="addContoBtn">+ Aggiungi al conto</button>
+        </div>
+
+        <div class="secondary-actions">
+          <button class="btn-ghost" id="exportExcelBtn">Esporta Excel</button>
+          <button class="btn-ghost" id="exportPdfBtn">Esporta PDF</button>
+          <button class="btn-danger" id="resetBtn">Reset dati</button>
+        </div>
+
+        <div class="hint">I dati vengono salvati sul dispositivo. Il reset richiede doppia conferma.</div>
+
+        <h2 style="margin-top: 24px;">Storico movimenti</h2>
+        <div id="logContainer"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Grafico riepilogativo</h2>
+        <canvas id="moneyChart"></canvas>
+        <div class="hint">Il PDF esportato include un riepilogo dei saldi e questo grafico.</div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'moneyCounterData_v2';
+    const currency = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' });
+
+    const defaultState = {
+      contanti: 0,
+      conto: 0,
+      transactions: [],
+      updatedAt: null
+    };
+
+    let state = loadState();
+
+    const contantiValue = document.getElementById('contantiValue');
+    const contoValue = document.getElementById('contoValue');
+    const totaleValue = document.getElementById('totaleValue');
+    const lastUpdate = document.getElementById('lastUpdate');
+    const importoInput = document.getElementById('importo');
+    const notaInput = document.getElementById('nota');
+    const logContainer = document.getElementById('logContainer');
+
+    const ctx = document.getElementById('moneyChart');
+    const moneyChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Contanti', 'Sul conto'],
+        datasets: [{
+          data: [state.contanti, state.conto],
+          backgroundColor: ['rgba(126, 240, 194, 0.85)', 'rgba(110, 168, 254, 0.85)'],
+          borderColor: ['rgba(126, 240, 194, 1)', 'rgba(110, 168, 254, 1)'],
+          borderWidth: 1.2,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: {
+              color: '#f3f6ff',
+              font: { size: 13 }
+            }
+          }
+        }
+      }
+    });
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { ...defaultState };
+        const parsed = JSON.parse(raw);
+        return {
+          contanti: Number(parsed.contanti) || 0,
+          conto: Number(parsed.conto) || 0,
+          transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
+          updatedAt: parsed.updatedAt || null
+        };
+      } catch {
+        return { ...defaultState };
+      }
+    }
+
+    function saveState() {
+      state.updatedAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function formatDate(dateString) {
+      const d = new Date(dateString);
+      return d.toLocaleString('it-IT');
+    }
+
+    function updateUI() {
+      const totale = state.contanti + state.conto;
+      contantiValue.textContent = currency.format(state.contanti);
+      contoValue.textContent = currency.format(state.conto);
+      totaleValue.textContent = currency.format(totale);
+      lastUpdate.textContent = state.updatedAt ? `Ultimo aggiornamento: ${formatDate(state.updatedAt)}` : 'Ultimo aggiornamento: --';
+
+      moneyChart.data.datasets[0].data = [state.contanti, state.conto];
+      moneyChart.update();
+
+      renderLog();
+    }
+
+    function renderLog() {
+      if (!state.transactions.length) {
+        logContainer.innerHTML = '<div class="empty">Nessun movimento registrato. Inserisci il primo importo qui sopra.</div>';
+        return;
+      }
+
+      logContainer.innerHTML = `<div class="log">${state.transactions.slice().reverse().map(item => `
+        <div class="log-item">
+          <div>
+            <div class="log-top">
+              <span class="badge">${item.type === 'contanti' ? 'Contanti' : 'Conto'}</span>
+              <span class="badge">${formatDate(item.createdAt)}</span>
+            </div>
+            <div>${escapeHtml(item.note || 'Movimento senza nota')}</div>
+          </div>
+          <div class="amount">${currency.format(item.amount)}</div>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function addTransaction(type) {
+      const amount = Number(importoInput.value);
+      const note = notaInput.value.trim();
+
+      if (!amount || amount <= 0) {
+        alert('Inserisci un importo valido maggiore di 0.');
+        return;
+      }
+
+      if (type === 'contanti') state.contanti += amount;
+      if (type === 'conto') state.conto += amount;
+
+      state.transactions.push({
+        type,
+        amount,
+        note,
+        createdAt: new Date().toISOString()
+      });
+
+      saveState();
+      updateUI();
+      importoInput.value = '';
+      notaInput.value = '';
+      importoInput.focus();
+    }
+
+    function resetData() {
+      const first = confirm('Vuoi davvero azzerare tutti i dati?');
+      if (!first) return;
+      const second = confirm('Conferma finale: questa operazione cancellerà saldi e storico movimenti.');
+      if (!second) return;
+
+      state = { ...defaultState };
+      localStorage.removeItem(STORAGE_KEY);
+      saveState();
+      updateUI();
+      alert('Dati azzerati correttamente.');
+    }
+
+    function buildExportRows() {
+      const rows = [
+        { Sezione: 'RIEPILOGO', Tipo: 'Contanti', Importo: state.contanti, Data: '', Nota: '' },
+        { Sezione: 'RIEPILOGO', Tipo: 'Conto', Importo: state.conto, Data: '', Nota: '' },
+        { Sezione: 'RIEPILOGO', Tipo: 'Totale', Importo: state.contanti + state.conto, Data: '', Nota: '' },
+        ...state.transactions.map(t => ({
+          Sezione: 'MOVIMENTO',
+          Tipo: t.type === 'contanti' ? 'Contanti' : 'Conto',
+          Importo: t.amount,
+          Data: formatDate(t.createdAt),
+          Nota: t.note || ''
+        }))
+      ];
+      return rows;
+    }
+
+    function exportExcel() {
+      const rows = buildExportRows();
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 14 },
+        { wch: 22 },
+        { wch: 40 }
+      ];
+      XLSX.utils.book_append_sheet(wb, ws, 'Money Counter');
+      XLSX.writeFile(wb, 'money_counter_export.xlsx');
+    }
+
+    async function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+      const width = pdf.internal.pageSize.getWidth();
+      let y = 50;
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(22);
+      pdf.text('Money Counter - Report', 40, y);
+      y += 30;
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(11);
+      pdf.text(`Data esportazione: ${new Date().toLocaleString('it-IT')}`, 40, y);
+      y += 26;
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.text('Riepilogo saldi', 40, y);
+      y += 22;
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(12);
+      pdf.text(`Contanti: ${currency.format(state.contanti)}`, 40, y); y += 18;
+      pdf.text(`Sul conto: ${currency.format(state.conto)}`, 40, y); y += 18;
+      pdf.text(`Totale: ${currency.format(state.contanti + state.conto)}`, 40, y); y += 28;
+
+      const chartImage = moneyChart.toBase64Image('image/png', 1);
+      pdf.addImage(chartImage, 'PNG', 40, y, 240, 240);
+      y += 260;
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.text('Storico movimenti', 40, y);
+      y += 20;
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+
+      const items = state.transactions.slice().reverse();
+      if (!items.length) {
+        pdf.text('Nessun movimento registrato.', 40, y);
+      } else {
+        for (const item of items) {
+          if (y > 760) {
+            pdf.addPage();
+            y = 50;
+          }
+          const line = `${formatDate(item.createdAt)} | ${item.type === 'contanti' ? 'Contanti' : 'Conto'} | ${currency.format(item.amount)} | ${item.note || 'Nessuna nota'}`;
+          const split = pdf.splitTextToSize(line, width - 80);
+          pdf.text(split, 40, y);
+          y += (split.length * 12) + 8;
+        }
+      }
+
+      pdf.save('money_counter_report.pdf');
+    }
+
+    document.getElementById('addContantiBtn').addEventListener('click', () => addTransaction('contanti'));
+    document.getElementById('addContoBtn').addEventListener('click', () => addTransaction('conto'));
+    document.getElementById('resetBtn').addEventListener('click', resetData);
+    document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
+    document.getElementById('exportPdfBtn').addEventListener('click', exportPDF);
+
+    importoInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addTransaction('conto');
+    });
+
+    updateUI();
+  </script>
+</body>
+</html>
